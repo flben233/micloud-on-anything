@@ -26,9 +26,9 @@ PARTITIONS = {
         ("/etc/build.prop", "system_ext/etc/build.prop"),
     ],
     "system_a": [
-        ("/framework.jar", "system/framework.jar"),
-        ("/etc/classpaths", "system/etc/classpaths"),
-        ("/etc/permissions", "system/etc/permissions"),
+        ("/system/framework/framework.jar", "system/framework.jar"),
+        ("/system/etc/classpaths", "system/etc/classpaths"),
+        ("/system/etc/permissions", "system/etc/permissions"),
         ("/system/build.prop", "system/system/build.prop"),
     ],
     "mi_ext_a": [
@@ -80,6 +80,8 @@ def _write_inode(ero: Erofs, nid: int, out: Path) -> None:
     if kind == 0x4000:
         ensure_dir(out)
         for name, child, _ in ero.listdir(nid):
+            if name in (".", ".."):
+                continue
             _write_inode(ero, child, out / name)
         try:
             os.chmod(out, mode & 0o777)
@@ -114,24 +116,25 @@ def extract_partition(image: Path, image_root: Path, output_root: Path, mappings
         _write_inode(ero, nid, destination)
 
 
-def extract_rom(config, *, force: bool = False) -> Path:
-    inputs = config.path("paths.inputs")
+def extract_rom(config, *, force: bool = False, partitions_only: bool = False, output: Path | None = None) -> Path:
+    inputs = output or config.path("paths.inputs")
     if inputs.is_dir() and not force:
         required = inputs / "product" / "app" / "MIUIXiaomiAccount" / "MIUIXiaomiAccount.apk"
         if required.is_file():
             log(f"using existing extracted inputs: {inputs}")
             return inputs
-    raw_dir = ensure_dir(config.path("paths.build_root") / "rom" / "raw")
-    images = extract_tgz(config.path("paths.rom_tgz"), raw_dir)
-    super_image = images.get("super.img")
-    if super_image is None:
-        raise PipelineError("super.img not found in ROM tgz")
-    raw_super = raw_dir / "super.raw.img"
-    super_image = _maybe_unsparse(super_image, raw_super)
     partitions_dir = ensure_dir(config.path("paths.partitions"))
-    if not (partitions_dir / "product_a.img").is_file():
-        log("unpacking super.img")
-        lpunpack.main(str(super_image), str(partitions_dir))
+    if not partitions_only:
+        raw_dir = ensure_dir(config.path("paths.build_root") / "rom" / "raw")
+        images = extract_tgz(config.path("paths.rom_tgz"), raw_dir)
+        super_image = images.get("super.img")
+        if super_image is None:
+            raise PipelineError("super.img not found in ROM tgz")
+        raw_super = raw_dir / "super.raw.img"
+        super_image = _maybe_unsparse(super_image, raw_super)
+        if not (partitions_dir / "product_a.img").is_file():
+            log("unpacking super.img")
+            lpunpack.main(str(super_image), str(partitions_dir))
     output_root = ensure_dir(inputs)
     for partition, mappings in PARTITIONS.items():
         image = partitions_dir / f"{partition}.img"

@@ -51,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pipeline.py", description="Build and verify the Xiaomi Cloud Port module")
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--inputs", default=None, help="extracted ROM input directory")
+    parser.add_argument("--partitions", default=None, help="partition image directory")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("preflight")
@@ -58,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("extract")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--partitions-only", action="store_true")
 
     p = sub.add_parser("build")
     p.add_argument("--skip-gallery", action="store_true")
@@ -82,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         config = load_config(args.config)
+        if args.partitions:
+            config.data.setdefault("paths", {})["partitions"] = args.partitions
         inputs = _inputs(config, args.inputs)
         build_root = _build_root(config)
         _apply_version(config, getattr(args, "version", None), getattr(args, "version_code", None))
@@ -91,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "extract":
-            result = extract_rom(config, force=args.force)
+            result = extract_rom(config, force=args.force, partitions_only=args.partitions_only, output=inputs)
             log(f"extracted inputs: {result}")
             return 0
 
