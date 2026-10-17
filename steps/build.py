@@ -167,8 +167,6 @@ def build(
         },
         output_dir=module_dir,
     )
-    if version:
-        module.write_module_prop(module_dir / "module.prop", config)
     result = module.package_module(module_dir, build_root / "MiCloudPort.zip")
     result["module_dir"] = str(module_dir)
     result["artifacts"] = {
