@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.miui.port.perms">
+
+    <!-- cloud/login chain permissions: redeclared as normal -->
+    <permission android:name="com.xiaomi.permission.CLOUD_MANAGER" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.ACTIVATE_SIM" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.ACCESS_WIFI" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.ACCESS_SECURITY_DEVICE_CREDENTIAL" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.MICLOUD" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.MT" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.SEND_PUSH" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.BIND_CONTINUITY_SERVICE" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.BIND_CONTINUITY_SERVICE_INTERNAL" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.DATA_UPDATE" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.MICLOUD_STATUS_INFO_CHANGED" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.SYNC_TAG_DATA" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.USE_KEYBAG" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.USE_KEYBOX" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.cloudkit.permission.ACCESS_CLOUDKIT_PROVIDER" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.AUTH_SERVICE" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.permission.TOGGLE_FIND_DEVICE" android:protectionLevel="normal"/>
+
+    <permission android:name="com.xiaomi.simactivate.service.ACTIVATE_SIM" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.simactivate.service.SYSTEM_PHONE_SERVICE" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.simactivate.service.PERMISSION_PHONE" android:protectionLevel="normal"/>
+
+    <permission android:name="com.xiaomi.account.permission.GUARD_LOGIN" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.account.permission.MI_MOVER" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.account.permission.RECEIVE_FIND_DEVICE_STATUS" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.account.permission.REMOVE_ACCOUNT_AUTHENTICATOR" android:protectionLevel="normal"/>
+    <permission android:name="com.xiaomi.account.permission.SEND_ACCOUNT_POST_CHANGE_BROADCAST" android:protectionLevel="normal"/>
+
+    <permission android:name="com.miui.cloudservice.permission.FIND_DEVICE" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.cloudservice.permission.MICLOUD_STATUS_SERVICE" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.cloudservice.permission.MIPUSH_RECEIVE" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.cloudservice.permission.PROVISION_ACCESS_SYNC_STATUS" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.cloudservice.permission.RECEIVING_STATS" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.cloudservice.lockScreen.permission.LOCKSCREEN_UPDATE_SERVICE" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.cloudserive.permission.USE_KEYCHAIN" android:protectionLevel="normal"/>
+    <permission android:name="miui.cloud.finddevice.AccessFindDevice" android:protectionLevel="normal"/>
+    <permission android:name="miui.cloud.finddevice.ManageFindDevice" android:protectionLevel="normal"/>
+    <permission android:name="miui.cloud.cloudserive.permission.SECURITY_DEVICE_CREDENTIAL" android:protectionLevel="normal"/>
+
+    <permission android:name="com.miui.core.permission.GEO_CODER" android:protectionLevel="normal"/>
+    <permission android:name="miui.permission.READ_LOGS" android:protectionLevel="normal"/>
+
+    <permission android:name="miui.permission.USE_INTERNAL_GENERAL_API" android:protectionLevel="normal"/>
+    <permission android:name="miui.permission.SHELL" android:protectionLevel="normal"/>
+    <permission android:name="android.miui.permission.SHELL" android:protectionLevel="normal"/>
+    <permission android:name="android.provision.permission.SEND_PROVISION_COMPLETE_BROADCAST" android:protectionLevel="normal"/>
+    <permission android:name="com.miui.antispam.permission.CONTENTPROVIDER" android:protectionLevel="normal"/>
+
+    <application android:hasCode="false" android:label="MiuiPortPerms">
+    </application>
+</manifest>

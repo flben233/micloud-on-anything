@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.miui.port.cloudid"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="35" />
+
+    <application
+        android:hasCode="true"
+        android:label="MiCloudIdProvider">
+        <provider
+            android:name=".CloudIdProvider"
+            android:authorities="com.xiaomi.cloud.cloudidprovider"
+            android:enabled="true"
+            android:exported="true" />
+    </application>
+</manifest>

@@ -1,0 +1,3 @@
+[signing]
+store_password = "CHANGE_ME"
+key_password = "CHANGE_ME"

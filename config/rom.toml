@@ -1,0 +1,127 @@
+id = "nezha_OS3.0.312.0.WPACNXM"
+device = "nezha"
+rom_version = "OS3.0.312.0.WPACNXM"
+android_api = 36
+
+[module]
+id = "micloudport"
+name = "Xiaomi Cloud Port (nezha)"
+version = "1.0.6"
+version_code = 7
+author = "opencode"
+description = "Ports Xiaomi Cloud (account/cloud/sync/backup/findmy), MIUI Gallery 4.3.1.18 and Sound Recorder from Xiaomi 17 HyperOS 3 to AOSP Android 16. Requires Magisk/KernelSU. Target: Android 16 (API 36), arm64/x86_64."
+
+[paths]
+inputs = "inputs/extracted"
+partitions = "inputs/partitions"
+rom_tgz = "inputs/nezha_images_OS3.0.312.0.WPACNXM_20260902.0000.00_16.0_cn_95dfc674ff.tgz"
+build_root = "build"
+releases = "releases"
+keystore = "inputs/own.jks"
+gallery = "E:/Xiaomi/work/tmp/gallery_43118_global.apk"
+zig = "tools/zig/zig.exe"
+
+[signing]
+alias = "own"
+store_password = ""
+key_password = ""
+
+[rom.props]
+"ro.miui.ui.version.code" = "816"
+"ro.miui.ui.version.name" = "V816"
+"ro.mi.os.version.code" = "3"
+"ro.mi.os.version.name" = "OS3.0"
+"ro.mi.os.version.incremental" = "OS3.0.312.0.WPACNXM"
+"ro.mi.os.version.publish" = "true"
+"ro.mi.os.version.beta" = "false"
+"ro.miui.build.region" = "cn"
+"ro.product.mod_device" = "nezha"
+"ro.miui.notch" = "1"
+"ro.miui.restrict_imei" = "1"
+"ro.miui.ui.font.animation" = "disable"
+"ro.ai.os.version.code" = "4"
+"ro.ai.os.version.name" = "OS3.1"
+"ro.miui.region" = "CN"
+
+[source]
+account = "product/app/MIUIXiaomiAccount/MIUIXiaomiAccount.apk"
+cloudservice = "product/app/MIUICloudService/MIUICloudService.apk"
+cloudsync = "product/app/MIUIMiCloudSync/MIUIMiCloudSync.apk"
+simactivate = "product/app/XiaomiSimActivateServiceCn/XiaomiSimActivateServiceCn.apk"
+xmscore = "product/app/XmsCore/XmsCore.apk"
+xmsfkeeper = "product/app/XMSFKeeperAll/XMSFKeeperAll.apk"
+findmy = "product/data-app/MIUIFindMy/MIUIFindMy.apk"
+backup = "product/priv-app/Backup/Backup.apk"
+cloudbackup = "product/priv-app/MIUICloudBackup/MIUICloudBackup.apk"
+cloudbackup_libs = "product/priv-app/MIUICloudBackup/lib/arm64"
+soundrecorder = "product/data-app/MIUISoundRecorderTargetSdk30/MIUISoundRecorderTargetSdk30.apk"
+rtmc = "system_ext/priv-app/RtMiCloudSDK/RtMiCloudSDK.apk"
+extres = "system_ext/framework/framework-ext-res/framework-ext-res.apk"
+miuisystem = "system_ext/app/miuisystem/miuisystem.apk"
+rom_framework = "system/framework.jar"
+system_ext_framework = "system_ext/framework"
+system_permissions = "system/etc/permissions"
+system_ext_permissions = "system_ext/etc/permissions"
+product_permissions = "product/etc/permissions"
+system_classpath = "system/etc/classpaths/bootclasspath.pb"
+system_build_prop = "system/system/build.prop"
+product_build_prop = "product/etc/build.prop"
+system_ext_build_prop = "system_ext/etc/build.prop"
+mi_ext_build_prop = "mi_ext/etc/build.prop"
+
+[source.jars]
+"miui-framework.jar" = "system_ext/framework/miui-framework.jar"
+"miui-telephony-common.jar" = "system_ext/framework/miui-telephony-common.jar"
+"miui-enterprise-sdk.jar" = "system_ext/framework/miui-enterprise-sdk.jar"
+"xiaomi-framework.jar" = "system_ext/framework/xiaomi-framework.jar"
+"xm-telephony-base.jar" = "system_ext/framework/xm-telephony-base.jar"
+"xm-telephony-common.jar" = "system_ext/framework/xm-telephony-common.jar"
+"gson.jar" = "system_ext/framework/gson.jar"
+"hyperos.rustruntime.jar" = "system_ext/framework/hyperos.rustruntime.jar"
+"vendor.xiaomi.hardware.videoservice-V9-java.jar" = "system_ext/framework/vendor.xiaomi.hardware.videoservice-V9-java.jar"
+
+[account]
+apk_sha1 = "08a47b7bbd792fb31e17147a9e93f95681bddd55"
+classes1_patch_offset = 5242020
+classes1_old_hex = "6e10811100000a000f00"
+classes1_new_hex = "12000f00000000000000"
+classes2_patch_offset = 522164
+classes2_old_hex = "6e202c011000"
+classes2_new_hex = "6e102b010000"
+
+[rtmc]
+get_sender_offset = 85504
+get_sender_old_hex = "6e104d0000000c001100"
+get_sender_new_hex = "1a00b907000000001100"
+
+[gallery]
+package = "com.miui.gallery"
+version_code = "4030118"
+activity = "com.miui.gallery/.activity.HomePageActivity"
+
+[recorder]
+package = "com.android.soundrecorder"
+activity = "com.android.soundrecorder/.StartActivity"
+
+[cloudid]
+package = "com.miui.port.cloudid"
+authority = "com.xiaomi.cloud.cloudidprovider"
+class = "com.miui.port.cloudid.CloudIdProvider"
+
+[verify]
+cloudbackup_activity = "com.miui.cloudbackup/.ui.CloudBackupDetailActivity"
+account_activity = "com.xiaomi.account/.ui.AccountSettingsActivity"
+log_path = "/data/local/tmp/micloudport.log"
+cloudid_authority = "content://com.xiaomi.cloud.cloudidprovider"
+
+[tools]
+adb = "E:/Android/Sdk/platform-tools/adb.exe"
+emulator = "E:/Android/Sdk/emulator/emulator.exe"
+avd = "Pixel_10"
+avd_home = "E:/Android/avd"
+build_tools = "E:/Android/Sdk/build-tools/36.0.0"
+android_jar = "E:/Android/Sdk/platforms/android-37.0/android.jar"
+java_home = "C:/Program Files/JetBrains/IntelliJ IDEA 2025.2.1/jbr"
+live_setup = "/data/local/tmp/live_setup.sh"
+
+

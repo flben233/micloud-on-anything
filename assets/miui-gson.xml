@@ -1,0 +1,3 @@
+<permissions>
+    <library name="gson.jar" file="/system_ext/framework/gson.jar" />
+</permissions>
