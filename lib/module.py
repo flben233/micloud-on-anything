@@ -177,5 +177,8 @@ def package_module(output_dir: Path, output_zip: Path) -> dict:
             if not path.is_file():
                 continue
             arcname = path.relative_to(output_dir).as_posix()
-            z.write(path, arcname)
+            info = zipfile.ZipInfo(arcname, date_time=(2020, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            z.writestr(info, path.read_bytes())
     return {"path": str(output_zip), "size": output_zip.stat().st_size, "sha256": sha256_file(output_zip)}
