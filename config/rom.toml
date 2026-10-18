@@ -6,10 +6,10 @@ android_api = 36
 [module]
 id = "micloudport"
 name = "Xiaomi Cloud Port (nezha)"
-version = "1.0.8"
-version_code = 9
-author = "opencode"
-description = "Ports Xiaomi Cloud (account/cloud/sync/backup/findmy), MIUI Gallery 4.3.1.18 and Sound Recorder from Xiaomi 17 HyperOS 3 to AOSP Android 16. Requires Magisk/KernelSU. Target: Android 16 (API 36), arm64/x86_64."
+version = "1.2"
+version_code = 18
+author = "ShirakawaTyu"
+description = "Ports Xiaomi Cloud (account/cloud/sync/backup/findmy), MIUI Gallery 4.3.1.18 (China), MediaEditor 2.3.0.8.3 and Sound Recorder from Xiaomi 17 HyperOS 3 to AOSP Android 16. Requires Magisk/KernelSU. Target: Android 16 (API 36), arm64/x86_64."
 
 [paths]
 inputs = "inputs/extracted"
@@ -18,7 +18,8 @@ rom_tgz = "inputs/nezha_images_OS3.0.312.0.WPACNXM_20260902.0000.00_16.0_cn_95df
 build_root = "build"
 releases = "releases"
 keystore = "inputs/own.jks"
-gallery = "E:/Xiaomi/work/tmp/gallery_43118_global.apk"
+gallery = "E:/Xiaomi/work/tmp/gallery_43118_cn.apk"
+mediaeditor = "E:/Xiaomi/work/tmp/MiMediaEditor.apk"
 zig = "tools/zig/zig.exe"
 
 [signing]
@@ -51,6 +52,7 @@ simactivate = "product/app/XiaomiSimActivateServiceCn/XiaomiSimActivateServiceCn
 xmscore = "product/app/XmsCore/XmsCore.apk"
 xmsfkeeper = "product/app/XMSFKeeperAll/XMSFKeeperAll.apk"
 findmy = "product/data-app/MIUIFindMy/MIUIFindMy.apk"
+finddevice = "product/priv-app/MIUIFindDeviceCN/MIUIFindDeviceCN.apk"
 backup = "product/priv-app/Backup/Backup.apk"
 cloudbackup = "product/priv-app/MIUICloudBackup/MIUICloudBackup.apk"
 cloudbackup_libs = "product/priv-app/MIUICloudBackup/lib/arm64"
@@ -60,6 +62,7 @@ extres = "system_ext/framework/framework-ext-res/framework-ext-res.apk"
 miuisystem = "system_ext/app/miuisystem/miuisystem.apk"
 rom_framework = "system/framework.jar"
 system_ext_framework = "system_ext/framework"
+security_credential_jar = "system_ext/framework/security-device-credential-sdk.jar"
 system_permissions = "system/etc/permissions"
 system_ext_permissions = "system_ext/etc/permissions"
 product_permissions = "product/etc/permissions"
@@ -97,7 +100,13 @@ get_sender_new_hex = "1a00b907000000001100"
 [gallery]
 package = "com.miui.gallery"
 version_code = "4030118"
+version_name = "4.3.1.18"
 activity = "com.miui.gallery/.activity.HomePageActivity"
+
+[mediaeditor]
+package = "com.miui.mediaeditor"
+version_code = "203990083"
+version_name = "2.3.0.8.3"
 
 [recorder]
 package = "com.android.soundrecorder"

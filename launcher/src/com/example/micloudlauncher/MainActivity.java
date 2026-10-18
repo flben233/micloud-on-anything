@@ -74,11 +74,13 @@ public class MainActivity extends Activity {
         }
 
         Button galleryDownload = new Button(this);
-        galleryDownload.setText("下载/更新小米相册 APK");
+        galleryDownload.setText("下载/更新小米相册 4.3.1.18 国内版");
         galleryDownload.setAllCaps(false);
         galleryDownload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(MainActivity.this,
+                        "下载页请选择 China 区域（4.3.1.18）", Toast.LENGTH_LONG).show();
                 openUrl(GALLERY_UPDATE_URL);
             }
         });
@@ -127,8 +129,45 @@ public class MainActivity extends Activity {
     }
 
     private void open(String pkg, String cls) {
+        if (isCloudSync(cls)) {
+            openCloudSync(pkg, cls);
+            return;
+        }
         Intent i = new Intent();
         i.setComponent(new ComponentName(pkg, cls));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(i);
+        } catch (Exception e) {
+            Toast.makeText(this, "打开失败: " + pkg + "/" + cls + "\n" + e, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private boolean isCloudSync(String cls) {
+        return "com.miui.cloudservice.mms.MmsSyncSettingsActivity".equals(cls)
+                || "com.miui.cloudservice.contacts.ContactCloudSettings".equals(cls)
+                || "com.miui.cloudservice.calllog.CallLogSyncSettingsActivity".equals(cls)
+                || "com.miui.cloudservice.soundrecorder.CloudSettingsActivity".equals(cls);
+    }
+
+    private String cloudSyncAuthority(String cls) {
+        if ("com.miui.cloudservice.mms.MmsSyncSettingsActivity".equals(cls)) {
+            return "sms";
+        }
+        if ("com.miui.cloudservice.contacts.ContactCloudSettings".equals(cls)) {
+            return "com.android.contacts";
+        }
+        if ("com.miui.cloudservice.calllog.CallLogSyncSettingsActivity".equals(cls)) {
+            return "call_log";
+        }
+        return "records";
+    }
+
+    private void openCloudSync(String pkg, String cls) {
+        String authority = cloudSyncAuthority(cls);
+        Intent i = new Intent(authority + ".SYNC_SETTINGS");
+        i.setComponent(new ComponentName(pkg, cls));
+        i.putExtra("authority", authority);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
             startActivity(i);

@@ -120,8 +120,6 @@ def assemble_module(
 
     files = ensure_dir(output_dir / "files")
     copy_file(artifacts["account_patch"], files / "patched_account.zip")
-    copy_file(artifacts["cloudid"], files / "CloudIdProvider.apk")
-    copy_file(artifacts["gallery"], files / "gallery_43118.apk")
     copy_file(artifacts["libshell_x64"], files / "libshell_jni_x86_64.so")
     copy_file(artifacts["libshell_arm64"], files / "libshell_jni_arm64.so")
 
@@ -136,34 +134,52 @@ def assemble_module(
     ):
         copy_component(_source(config, key, inputs), product_app / dest, dest + ".apk")
     copy_component(_source(config, "findmy", inputs), product_app / "MIUIFindMy", "MIUIFindMy.apk")
+    copy_component(artifacts["cloudid"], product_app / "CloudIdProvider", "CloudIdProvider.apk")
+    gallery_app = product_app / "MiCloudGallery"
+    copy_component(artifacts["gallery"], gallery_app, "MiCloudGallery.apk")
+    gallery_libs = Path(__file__).resolve().parents[1] / "assets" / "gallery-libs"
+    if gallery_libs.is_dir():
+        copy_tree(gallery_libs, ensure_dir(gallery_app / "lib" / "arm64"))
+        copy_tree(gallery_libs, ensure_dir(output_dir / "system" / "product" / "lib64"))
+    copy_component(artifacts["mediaeditor"], product_app / "MiMediaEditor", "MiMediaEditor.apk")
+    copy_component(artifacts["xposed_apk"], product_app / "MiCloudXposed", "MiCloudXposed.apk")
 
     product_priv = ensure_dir(output_dir / "system" / "product" / "priv-app")
     copy_component(_source(config, "backup", inputs), product_priv / "Backup", "Backup.apk")
     copy_component(_source(config, "cloudbackup", inputs), product_priv / "MIUICloudBackup", "MIUICloudBackup.apk")
+    copy_component(_source(config, "finddevice", inputs), product_priv / "MIUIFindDeviceCN", "MIUIFindDeviceCN.apk")
     copy_component(_source(config, "soundrecorder", inputs), product_priv / "MIUISoundRecorder", "MIUISoundRecorder.apk")
     libs = _source(config, "cloudbackup_libs", inputs) if config.get("source.cloudbackup_libs") else (Path(__file__).resolve().parents[1] / "assets" / "cloudbackup-libs")
     if not libs.is_dir():
         libs = Path(__file__).resolve().parents[1] / "assets" / "cloudbackup-libs"
     if libs.is_dir():
-        copy_tree(libs, product_priv / "MIUICloudBackup" / "lib" / "arm64")
+        cloudbackup_libdir = ensure_dir(product_priv / "MIUICloudBackup" / "lib" / "arm64")
+        copy_tree(libs, cloudbackup_libdir)
+        copy_file(artifacts["libshell_arm64"], cloudbackup_libdir / "libshell_jni.so")
 
     product_permissions = ensure_dir(output_dir / "system" / "product" / "etc" / "permissions")
-    for name in ("privapp-miui-gallery.xml", "privapp-miui-recorder.xml", "privapp-permissions-miui-cloud.xml"):
+    for name in ("privapp-miui-gallery.xml", "privapp-miui-recorder.xml",
+                 "privapp-permissions-miui-cloud.xml", "privapp-permissions-miui-finddevice.xml"):
         copy_file(Path(__file__).resolve().parents[1] / "assets" / name, product_permissions / name)
 
     system_ext = ensure_dir(output_dir / "system" / "system_ext")
+    gallery_libs = Path(__file__).resolve().parents[1] / "assets" / "gallery-libs"
+    if gallery_libs.is_dir():
+        copy_tree(gallery_libs, ensure_dir(system_ext / "lib64"))
     copy_component(artifacts["rtmc"], system_ext / "priv-app" / "RtMiCloudSDK", "RtMiCloudSDK.apk")
     framework = ensure_dir(system_ext / "framework")
+    copy_component(_source(config, "extres", inputs),
+                   framework / "framework-ext-res", "framework-ext-res.apk")
+    copy_file(artifacts["androidx_stub"], framework / "androidx-core-stub.jar")
     copy_file(artifacts["miuisystem_jar"], framework / "MiuiSystemCls.jar")
+    copy_file(_source(config, "security_credential_jar", inputs), framework / "security-device-credential-sdk.jar")
     copy_file(_source(config, "rom_framework", inputs), framework / "rom-framework.jar")
     for name, relative in config.section("source.jars").items():
         copy_file(inputs / relative, framework / name)
     system_ext_permissions = ensure_dir(system_ext / "etc" / "permissions")
-    for name in ("miui-system-lib.xml", "miui-gson.xml"):
+    for name in ("miui-system-lib.xml", "miui-gson.xml", "security-device-credential-sdk.xml"):
         copy_file(Path(__file__).resolve().parents[1] / "assets" / name, system_ext_permissions / name)
 
-    classpath = ensure_dir(output_dir / "system" / "etc" / "classpaths")
-    copy_file(Path(__file__).resolve().parents[1] / "assets" / "bootclasspath.pb", classpath / "bootclasspath.pb")
     perms = ensure_dir(output_dir / "system" / "framework" / "MiuiPortPerms")
     copy_file(artifacts["perms"], perms / "MiuiPortPerms.apk")
     return output_dir

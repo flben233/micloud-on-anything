@@ -118,6 +118,72 @@ def build_dex_jar(source_apk: Path, output_jar: Path) -> Path:
     return output_jar
 
 
+def build_java_dex_jar(
+    *,
+    source_dir: Path,
+    output_jar: Path,
+    work_dir: Path,
+    build_tools: Path,
+    android_jar: Path,
+    java_home: str | None,
+    classpath: Path | None = None,
+    min_sdk: int = 29,
+) -> Path:
+    if not source_dir.is_dir():
+        raise PipelineError(f"Java source directory not found: {source_dir}")
+    java_files = sorted(source_dir.rglob("*.java"))
+    if not java_files:
+        raise PipelineError(f"no Java sources in {source_dir}")
+    if not java_home:
+        raise PipelineError("java_home is required to compile Java sources")
+    javac = Path(java_home) / "bin" / "javac.exe"
+    require_file(javac, "javac")
+
+    if work_dir.exists():
+        shutil.rmtree(work_dir)
+    classes_dir = ensure_dir(work_dir / "classes")
+    dex_dir = ensure_dir(work_dir / "dex")
+    command = [
+        str(javac),
+        "-source",
+        "8",
+        "-target",
+        "8",
+        "-bootclasspath",
+        str(android_jar),
+    ]
+    if classpath is not None:
+        command.extend(["-classpath", str(classpath)])
+    command.extend(["-d", str(classes_dir), *[str(path) for path in java_files]])
+    _run_tool(command, java_home=java_home, label="javac")
+
+    class_files = sorted(classes_dir.rglob("*.class"))
+    if not class_files:
+        raise PipelineError(f"javac produced no classes for {source_dir}")
+    _run_tool(
+        [
+            str(build_tools / "d8.bat"),
+            "--min-api",
+            str(min_sdk),
+            "--lib",
+            str(android_jar),
+            "--output",
+            str(dex_dir),
+            *[str(path) for path in class_files],
+        ],
+        java_home=java_home,
+        label="d8",
+    )
+    classes_dex = dex_dir / "classes.dex"
+    require_file(classes_dex, "generated classes.dex")
+    ensure_dir(output_jar.parent)
+    with zipfile.ZipFile(output_jar, "w") as zout:
+        info = zipfile.ZipInfo("classes.dex", date_time=_zip_datetime())
+        info.compress_type = zipfile.ZIP_STORED
+        zout.writestr(info, classes_dex.read_bytes())
+    return output_jar
+
+
 def _parse_axml_strings(data: bytes) -> list[str]:
     _, _, _ = struct.unpack_from("<HHI", data, 8)
     count, _, flags, strings_start, _ = struct.unpack_from("<IIIII", data, 16)

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 from lib import apk, module, rtmc
@@ -78,6 +80,20 @@ def build(
     )
 
     miuisystem_jar = apk.build_dex_jar(source["miuisystem"], artifacts_dir / "MiuiSystemCls.jar")
+    androidx_stub = apk.build_java_dex_jar(
+        source_dir=Path(__file__).resolve().parents[1] / "xposed" / "stub",
+        output_jar=artifacts_dir / "androidx-core-stub.jar",
+        work_dir=work_dir / "androidx-stub",
+        build_tools=build_tools,
+        android_jar=android_jar,
+        java_home=java_home,
+    )
+    xposed_script = Path(__file__).resolve().parents[1] / "xposed" / "build.py"
+    xposed_apk = build_root / "MiCloudXposed.apk"
+    if not xposed_script.is_file():
+        raise PipelineError(f"Xposed build script not found: {xposed_script}")
+    log("building Xposed module APK")
+    subprocess.run([sys.executable, str(xposed_script)], check=True)
     perms = apk.build_simple_apk(
         build_tools=build_tools,
         android_jar=android_jar,
@@ -148,6 +164,8 @@ def build(
     else:
         if not gallery.is_file():
             raise PipelineError("gallery APK not found (use --skip-gallery only after placing a placeholder)")
+    mediaeditor = config.path("paths.mediaeditor")
+    require_file(mediaeditor, "mediaeditor APK")
 
     module_dir = ensure_dir(build_root / "module" / "MiCloudPort")
     module.assemble_module(
@@ -159,10 +177,13 @@ def build(
             "account_json": account_json,
             "cloudid": cloudid,
             "gallery": gallery,
+            "mediaeditor": mediaeditor,
             "libshell_x64": libshell_x64,
             "libshell_arm64": libshell_arm64,
             "rtmc": rtmc_apk,
             "miuisystem_jar": miuisystem_jar,
+            "androidx_stub": androidx_stub,
+            "xposed_apk": xposed_apk,
             "perms": perms,
         },
         output_dir=module_dir,
@@ -174,7 +195,10 @@ def build(
         "rtmc": str(rtmc_apk),
         "perms": str(perms),
         "cloudid": str(cloudid),
+        "mediaeditor": str(mediaeditor),
         "miuisystem_jar": str(miuisystem_jar),
+        "androidx_stub": str(androidx_stub),
+        "xposed_apk": str(xposed_apk),
         "account_json": str(account_json),
     }
     result["sha256"] = sha256_file(build_root / "MiCloudPort.zip")

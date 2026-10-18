@@ -17,7 +17,7 @@ def _source(config, key: str, inputs: Path) -> Path:
 def preflight(config, inputs: Path, *, require_gallery: bool = True) -> dict:
     require_dir(inputs, "extracted ROM input")
     checks: dict[str, str] = {}
-    for key in ("account", "cloudservice", "cloudsync", "simactivate", "xmscore", "xmsfkeeper", "findmy", "backup", "cloudbackup", "soundrecorder", "rtmc", "extres", "miuisystem", "rom_framework"):
+    for key in ("account", "cloudservice", "cloudsync", "simactivate", "xmscore", "xmsfkeeper", "findmy", "backup", "cloudbackup", "soundrecorder", "rtmc", "extres", "miuisystem", "rom_framework", "security_credential_jar"):
         path = _source(config, key, inputs)
         require_file(path, key)
         checks[key] = str(path)
@@ -44,6 +44,8 @@ def preflight(config, inputs: Path, *, require_gallery: bool = True) -> dict:
     gallery = config.path("paths.gallery")
     if require_gallery:
         require_file(gallery, "gallery APK")
+    mediaeditor = config.path("paths.mediaeditor")
+    require_file(mediaeditor, "mediaeditor APK")
     adb = config.path("tools.adb")
     if adb and not adb.is_file():
         log(f"warning: adb not found at {adb}")

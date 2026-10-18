@@ -76,6 +76,17 @@ def verify(config, zip_path: Path | None = None, install: bool = False, start: b
     gallery = adb(config, "shell", "dumpsys", "package", package, check=False)
     version = re.search(r"versionCode=(\d+)", gallery)
     gallery_code = version.group(1) if version else ""
+    gallery_name_match = re.search(r"versionName=(\S+)", gallery)
+    gallery_name = gallery_name_match.group(1) if gallery_name_match else ""
+    if gallery_name.endswith("-global"):
+        raise PipelineError(f"global gallery is still installed: {gallery_name}")
+
+    editor_package = str(config.get("mediaeditor.package"))
+    editor = adb(config, "shell", "dumpsys", "package", editor_package, check=False)
+    editor_version = re.search(r"versionCode=(\d+)", editor)
+    editor_code = editor_version.group(1) if editor_version else ""
+    if not editor_code:
+        raise PipelineError(f"mediaeditor is not installed: {editor_package}")
 
     log_path = str(config.get("verify.log_path"))
     service_log = adb(config, "shell", "tail", "-n", "120", log_path, check=False)
@@ -91,11 +102,14 @@ def verify(config, zip_path: Path | None = None, install: bool = False, start: b
     result = {
         "cloudid": cloudid.strip(),
         "gallery_version": gallery_code,
+        "gallery_version_name": gallery_name,
+        "mediaeditor_version": editor_code,
         "cloudbackup_running": "com.miui.cloudbackup" in adb(config, "shell", "pidof", "com.miui.cloudbackup", check=False),
         "service_log_tail": service_log.strip().splitlines()[-5:] if service_log.strip() else [],
         "crash_cloudbackup": bool(cloudbackup_crash),
     }
     log("verify OK")
     log(f"  cloudid: {result['cloudid']}")
-    log(f"  gallery versionCode: {gallery_code}")
+    log(f"  gallery: {gallery_name} ({gallery_code})")
+    log(f"  mediaeditor versionCode: {editor_code}")
     return result

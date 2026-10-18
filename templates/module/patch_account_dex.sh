@@ -5,9 +5,17 @@ exec >>"$LOG" 2>&1
 echo "==== patch_account_dex $(date) ===="
 
 APK=/product/app/MIUIXiaomiAccount/MIUIXiaomiAccount.apk
+ORIG="$MODDIR/system/product/app/MIUIXiaomiAccount/MIUIXiaomiAccount.apk"
 ZIP="$MODDIR/files/patched_account.zip"
 [ -f "$APK" ] || { echo "account APK missing"; exit 1; }
 [ -f "$ZIP" ] || { echo "patched zip missing"; exit 1; }
+[ -f "$ORIG" ] || { echo "original account APK missing"; exit 1; }
+
+restore_apk() {
+  umount -l "$APK" 2>/dev/null
+  mount -o bind "$ORIG" "$APK" 2>/dev/null
+}
+trap restore_apk EXIT
 
 ABI=$(getprop ro.product.cpu.abi)
 case "$ABI" in
@@ -30,11 +38,21 @@ DEX2OAT=/apex/com.android.art/bin/dex2oat64
 [ -x "$DEX2OAT" ] || DEX2OAT=/system/bin/dex2oat64
 [ -x "$DEX2OAT" ] || { echo "dex2oat64 not found"; exit 1; }
 
-BOOT=/data/misc/apexdata/com.android.art/dalvik-cache/$ISA/boot.art
-if [ ! -f "$BOOT" ]; then
-  echo "boot image missing: $BOOT"
+BOOT=
+for b in \
+  "/data/misc/apexdata/com.android.art/dalvik-cache/$ISA/boot.art" \
+  "/system/framework/$ISA/boot.art" \
+  "/apex/com.android.art/javalib/$ISA/boot.art"; do
+  if [ -f "$b" ]; then
+    BOOT="$b"
+    break
+  fi
+done
+if [ -z "$BOOT" ]; then
+  echo "boot image missing for $ISA"
   exit 1
 fi
+echo "using boot image: $BOOT"
 
 TMP=/data/local/tmp/micloudport_acct
 mkdir -p "$TMP" "$D"
@@ -49,7 +67,6 @@ CTX="$CTX}"
 am force-stop com.xiaomi.account
 umount -l "$APK" 2>/dev/null
 mount -o bind "$ZIP" "$APK" || { echo "bind mount failed"; exit 1; }
-trap 'umount -l "$APK" 2>/dev/null' EXIT
 
 echo "compiling patched account dex ($ISA)"
 "$DEX2OAT" \
