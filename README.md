@@ -40,6 +40,7 @@ scripts/
 │  ├─ build.py              # 构建全部产物
 │  └─ verify.py             # 模拟器验证
 ├─ templates/module/        # Magisk 模块脚本模板
+├─ launcher/                # 小米云入口 APK 源码（Manifest + Java）
 ├─ assets/                  # 权限 XML、provider 源码、libshell stub、类路径
 ├─ build/                   # 生成物，git 忽略
 ├─ releases/                # 发布 zip，git 忽略
