@@ -6,8 +6,8 @@ android_api = 36
 [module]
 id = "micloudport"
 name = "Xiaomi Cloud Port (nezha)"
-version = "1.0.6"
-version_code = 7
+version = "1.0.8"
+version_code = 9
 author = "opencode"
 description = "Ports Xiaomi Cloud (account/cloud/sync/backup/findmy), MIUI Gallery 4.3.1.18 and Sound Recorder from Xiaomi 17 HyperOS 3 to AOSP Android 16. Requires Magisk/KernelSU. Target: Android 16 (API 36), arm64/x86_64."
 

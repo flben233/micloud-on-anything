@@ -47,9 +47,9 @@ CTX='PCL[]{PCL[/system_ext/priv-app/RtMiCloudSDK/RtMiCloudSDK.apk]'
 CTX="$CTX}"
 
 am force-stop com.xiaomi.account
-umount "$APK" 2>/dev/null
+umount -l "$APK" 2>/dev/null
 mount -o bind "$ZIP" "$APK" || { echo "bind mount failed"; exit 1; }
-trap 'umount "$APK" 2>/dev/null' EXIT
+trap 'umount -l "$APK" 2>/dev/null' EXIT
 
 echo "compiling patched account dex ($ISA)"
 "$DEX2OAT" \

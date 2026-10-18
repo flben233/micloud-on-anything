@@ -28,6 +28,7 @@ set_perm "$MODPATH/system/lib64/libshell_jni.so" 0 0 0644
 set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
 set_perm "$MODPATH/service.sh" 0 0 0755
 set_perm "$MODPATH/patch_account_dex.sh" 0 0 0755
+set_perm "$MODPATH/uninstall.sh" 0 0 0755
 set_perm "$MODPATH/system.prop" 0 0 0644
 
 ui_print "- Xiaomi Cloud Port installed"

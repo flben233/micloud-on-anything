@@ -8,8 +8,9 @@
 
 - 已在 x86_64 Android 16 模拟器（Magisk 30.7 + live_setup）完成全链路验证。
 - 已验证：账号 dex 补丁、RtMiCloudSDK 资源合并、MiuiPortPerms、CloudIdProvider、云备份 device ID、相册安装、录音机部署。
-- 当前模块：`1.0.6` / `versionCode=7`。
-- 已验证的确定性模块包：`194,822,193B`，SHA256 `B491245FF41BB06B63BE99FE637268B94627267E95395C5D0E3A407559055D21`。
+- 当前模块：`1.0.8` / `versionCode=9`，已重新刷入并在模拟器激活。
+- 当前确定性模块包：`194,823,112B`，SHA256 `74697C7DFEDC9FBC1B5F39051429C015FA7255CAF8F9FDB3889AD53254A72C35`。
+- v1.0.6 已完成模拟器全链路验证；v1.0.7 的 `uninstall.sh` 已在模拟器实际执行并恢复；v1.0.8 修复账号 dex2oat 后 bind mount 未卸载的问题（改用 `umount -l`）。
 - 尚未验证：arm64 真机、KernelSU、干净设备首次安装；12.7GB ROM tgz 的全量解包路径尚未实跑。
 - 已知遗留：账号设置页可能因 `FindDeviceStatusManager` 绑定 `com.xiaomi.finddevice` 失败而崩溃，和 cloudbackup device ID 无关。
 
@@ -103,7 +104,7 @@ python -X utf8 .\pipeline.py --inputs E:\Xiaomi\work\extract build
 build/artifacts/                       # account patch、RTMC、perms、cloudid 等
 build/module/MiCloudPort/              # 可直接检查的模块目录
 build/MiCloudPort.zip                  # 模块包
-releases/MiCloudPort-1.0.6.zip         # 发布副本
+releases/MiCloudPort-1.0.8.zip         # 发布副本
 ```
 
 用 PowerShell 包装器：
@@ -155,6 +156,23 @@ python -X utf8 .\pipeline.py extract
 4. 从 EROFS 提取流水线需要的目录到 `paths.inputs`。
 
 注意：当前代码路径已实现，但尚未用实际 12.7GB tgz 完整跑过；建议先用 `--partitions-only` 验证。
+
+## 卸载
+
+Magisk/KernelSU 卸载模块时会执行 `uninstall.sh`，自动清理：
+
+- 账号 odex/vdex、`/data/adb/micloudport_*` marker 和版本缓存
+- `/data/local/tmp/micloudport*` 日志与临时文件
+- `com.miui.port.cloudid` data-app 及其数据目录
+- 模块安装的 4.3.1.18 相册（仅当其仍为 data-app 版本 `4030118`）
+- `READ_DEVICE_IDENTIFIERS`、相册存储 appop、调试属性和模拟器 captive portal 设置
+- 录音机 CTA 预置文件
+
+不会自动删除：账号登录态、小米云/同步/备份的应用数据、用户手动保留的相册/录音数据。需要彻底清理时，先卸载模块，再按需清理对应应用数据和 `accounts.db`。
+
+已在模拟器实测 v1.0.7 和 v1.0.8：CloudIdProvider/Gallery 被卸载、账号 odex/vdex 和 marker 被删除、appops 恢复 default、`hidden_api_policy`/captive portal 设置被删除；随后重新刷入模块并重启，service 自动恢复 provider、gallery 和账号 odex。测试中发现账号 dex2oat 的 bind mount 可能因 busy 未卸载，v1.0.8 已把 `umount` 改为 `umount -l` 并在卸载脚本中主动清理解除。
+
+如果直接删除 `/data/adb/modules/micloudport` 而不通过 Magisk/KernelSU 卸载，`uninstall.sh` 不会执行，仍需手动清理上述残留。卸载完成后建议重启，让 systemless overlay/属性完全移除。
 
 ## 命令说明
 
@@ -263,6 +281,7 @@ AOSP 没有这个 provider。模块使用独立 data-app `com.miui.port.cloudid`
 - `post-fs-data.sh`：`resetprop` 设置 15 个 MIUI 属性；模块 versionCode 变化时清 `package_cache`。
 - `service.sh`：等待 CE 解锁，设置 appops/权限，预置录音机 CTA，安装 CloudIdProvider 和相册，最后触发账号 odex 补丁。
 - `customize.sh`：按 `$ARCH`（arm64/x64）选择 libshell stub，并创建 `system/lib64`。
+- `uninstall.sh`：通过 Magisk/KernelSU 卸载模块时清理 odex/vdex、data-app、appops、临时文件和 CTA 预置；不删除账号/云服务用户数据。
 
 ## 常见问题
 
