@@ -7,10 +7,12 @@
 ## 当前状态
 
 - 已在 x86_64 Android 16 模拟器（Magisk 30.7 + Vector + live_setup）完成全链路验证。
-- 已验证：账号 dex 补丁、RtMiCloudSDK 资源合并、MiuiPortPerms、CloudIdProvider、云备份 device ID、国内版相册替换、MediaEditor 安装与编辑保存、录音机部署；相册云同步已验证到元数据/列表下载（`cloud` 表 730→1537，128 photos+1 video），文件上传尚未验证。
+- 已验证：账号 dex 补丁、RtMiCloudSDK 资源合并、MiuiPortPerms、CloudIdProvider、云备份 device ID、国内版相册替换、MediaEditor 安装与编辑保存、录音机部署；相册云同步已验证到元数据/列表下载和普通照片上传。真机 245 个未上云项均属于从未开启同步的本地相册；唯一相机相册未同步项是 2.28GB 视频，云端剩余约 1.5GB，属容量限制。
 - **2026-10-18 Xposed 注入验证**：Vector 加载 `MiCloudXposed` 后，`ApplicationLoaders.getSharedLibraryClassLoaderWithSharedLibraries` 钩子把 12 个 MIUI jar 注入 `RtMiCloudSDK.apk` 的 classloader，包级 `onPackageLoaded` 再注入各应用；cloudservice/account/simactivate/soundrecorder/gallery 均出现 `SubscriptionManager resolved`，`get deviceId failed`/`IllegalDeviceException` 不再出现，无 FATAL。
-- 当前模块：`1.2` / `versionCode=18`，作者 `ShirakawaTyu`。已移除 `post-mount.sh`/`initrc`/`load_exports` 的 bootclasspath 方案，改用 Vector + libxposed；模块内含 `system/system_ext/framework/androidx-core-stub.jar`（780B），以及 `system/product/app/` 下的 `CloudIdProvider`、`MiCloudGallery`、`MiMediaEditor`、`MiCloudXposed`（`versionCode=2`）。正常 Magisk/KernelSU 开机由 PMS 直接扫描 system 应用；`service.sh` 只在 `pm path` 缺失时用模块内 APK 兜底安装，并设置 Vector scope。入口 APK `MiCloudLauncher` `1.5` / `versionCode=6` 已安装。
-- 当前确定性模块包：`412,297,510B`，SHA256 `8deb7967deff8b0e3ef1830aefaf76173ac49b4f14964e8281d216df8d31b1a8`；`releases/MiCloudPort-1.2.zip` 为发布副本。
+- 当前模块：`1.2.2` / `versionCode=20`，作者 `ShirakawaTyu`。已移除 `post-mount.sh`/`initrc`/`load_exports` 的 bootclasspath 方案，改用 Vector + libxposed；模块内含 `system/system_ext/framework/androidx-core-stub.jar`（780B），以及 `system/product/app/` 下的 `CloudIdProvider`、`MiCloudGallery`、`MiMediaEditor`、`MiCloudXposed`（`versionCode=2`）。正常 Magisk/KernelSU 开机由 PMS 直接扫描 system 应用；`service.sh` 只在 `pm path` 缺失时用模块内 APK 兜底安装，并设置 Vector scope。入口 APK `MiCloudLauncher` `1.5` / `versionCode=6` 已安装。
+- 当前确定性模块包：`437,103,485B`，SHA256 `8072b2481862681aa0f2471e588e5c03bb6157c8446f2c4f6d56924d28fbc1b7`；`releases/MiCloudPort-1.2.2.zip` 为发布副本。
+- **2026-10-18 v1.2.2**：新增刷入时音量键交互选项，可将红魔通话录音目录 `/storage/emulated/0/CallRecord` 通过 bind mount 映射到小米录音的 `/storage/emulated/0/MIUI/sound_recorder/call_rec`；`VOLUME UP` 启用、`VOLUME DOWN` 禁用、15 秒无按键保持当前设置。选择持久化到 `/data/adb/micloudport_callrec.conf`。挂载只在目标目录为空（或仅有 `.nomedia`）时执行，已有小米录音时安全跳过。模拟器已验证新文件可被小米录音扫描并写入 `record.db`。
+- **2026-10-18 v1.2.1**：真机删除相册图片时 `MiSightUtil.sendRecognizeEvent` → `com.miui.misight.mievent.MiSight.<clinit>` 调用 `System.loadLibrary("libmievent.so")`，而相册作为 `/product/app` 系统应用时 `extractNativeLibs=true`，APK 内 arm64 库不会自动解压，导致 `UnsatisfiedLinkError` 闪退。构建时现在从相册 APK 自动提取全部 24 个 `lib/arm64-v8a/*.so` 到 `system/product/app/MiCloudGallery/lib/arm64/`（包括 `libmievent.so`、`libmigalleryffmpeg.so`、`libbindcore.so` 等），并保留 ROM 的 `libMiMainColor.so`/`libc++_shared.so` 覆盖。
 - **2026-10-18 v1.2**：Android 16 的 `USE_ICC_AUTH_WITH_DEVICE_IDENTIFIER` 是 runtime permission app-op，`cmd appops set` 无法强制 allow（新 `AccessCheckingService`/`AppOpService` 直接拒绝 UID mode），因此改为在 `com.xiaomi.simactivate.service` 内 hook `j1.r.l/i/c`：捕获 `getSubscriberId` 等 telephony 调用的 `SecurityException` 并返回 null，使激活信息走“SIM 未插入”分支；真机有权限时仍返回原值。`service.sh` 已移除无效的 `allow_icc_auth_appop`。Xposed APK 21,094B，SHA256 `a76863ff5c80e2e6a8645f890f166e0c8cdaf546b0efe0b26902aea67016d4c2`。
 - v1.0.6 已完成模拟器全链路验证；v1.0.7/v1.0.8 的 `uninstall.sh` 已实际执行并恢复，且 v1.0.8 修复账号 dex2oat 后 bind mount 未卸载的问题（改用 `umount -l`）；v1.0.9 已完成升级安装、global→国内版相册替换和 MediaEditor 编辑/保存实测（该版本卸载脚本尚未重新执行）。
 - 尚未验证：arm64 真机、干净设备首次安装；12.7GB ROM tgz 的全量解包路径尚未实跑。模拟器上 cloudbackup 仍因 `libutils.so` 仅 arm64 崩溃（转译环境限制）。
@@ -292,6 +294,15 @@ AOSP 没有这个 provider。模块在 `system/product/app/CloudIdProvider/` 预
 - MediaEditor 安装时要求 shared library `security-device-credential-sdk.jar`；模块把 ROM 的 `system_ext/framework/security-device-credential-sdk.jar` 和对应的 `system_ext/etc/permissions/security-device-credential-sdk.xml` 一起挂载，否则会报 `INSTALL_FAILED_MISSING_SHARED_LIBRARY`。
 - 模拟器已实测：Edit → 接受条款 → 跳过编辑器更新 → Crop/Rotate → Save → 返回相册；输出为新文件（源文件所在相册，例如 `/storage/emulated/0/DCIM/Creative/IMG_*.png` 或存储根目录），相册自动扫描并显示。模拟器上 Filter 缩略图渲染异常（arm64 转译），基础编辑与保存可用。
 
+### 红魔通话录音映射（v1.2.2）
+
+- 目标是把红魔通话录音目录 `/storage/emulated/0/CallRecord` 映射到小米录音读取通话录音的 `/storage/emulated/0/MIUI/sound_recorder/call_rec`。
+- 安装时 `customize.sh` 用 `getevent` 等待音量键：`VOLUME UP` 启用、`VOLUME DOWN` 禁用，15 秒内无按键保持当前配置；结果写入 `/data/adb/micloudport_callrec.conf`（`1`/`0`）。Magisk 安装器会在提示出现前解压模块，用户看到提示后再按即可。
+- 开机 `service.sh` 在 CE 解锁后执行 `mount --bind`。必须挂载 FUSE 路径 `/storage/emulated/0/...`；软链接在该 FUSE 上不可用（`Function not implemented`），挂载 `/data/media/0` 下层路径会导致新增文件在 FUSE 中显示为 0 字节。
+- 目标目录已有小米录音时（`.nomedia` 除外）不覆盖、不隐藏，日志为 `callrec mapping skipped: target has existing files`；需要合并两套录音时需先手动迁移。
+- 模拟器实测：完整 437MB 模块安装、重启后的 `service.sh` bind mount 和应用扫描均通过；红魔录音被小米录音扫描，`record.db` 新增对应行（`file_path` 指向 `call_rec`，`file_size` 正确）；重复文件会被跳过。
+- 卸载时 `uninstall.sh` 执行 `umount -l` 并删除配置文件。
+
 ### APK 预置策略
 
 - `CloudIdProvider`、国内版 Gallery、MediaEditor、`MiCloudXposed` 直接放在模块的 `system/product/app/`，Magisk/KernelSU 正常开机在 PMS 扫描前挂载，因此会作为 system app 注册，不依赖 `service.sh` 的 `pm install`。
@@ -302,10 +313,10 @@ AOSP 没有这个 provider。模块在 `system/product/app/CloudIdProvider/` 预
 ### 模块脚本
 
 - `post-fs-data.sh`：`resetprop` 设置 15 个 MIUI 属性；模块 versionCode 变化时清 `package_cache`。
-- `service.sh`：等待 CE 解锁，设置 appops/权限，预置录音机 CTA；CloudIdProvider/Gallery/MediaEditor/Xposed 正常情况下已由 system 扫描，service 只在 `pm path` 为空或版本过旧时从 `system/product/app` 兜底安装，并设置 Vector scope；最后触发账号 odex 补丁。
+- `service.sh`：等待 CE 解锁，按 `/data/adb/micloudport_callrec.conf` 设置可选的 `CallRecord` → `call_rec` bind mount，设置 appops/权限，预置录音机 CTA；CloudIdProvider/Gallery/MediaEditor/Xposed 正常情况下已由 system 扫描，service 只在 `pm path` 为空或版本过旧时从 `system/product/app` 兜底安装，并设置 Vector scope；最后触发账号 odex 补丁。
 - `patch_account_dex.sh`：bind mount 补丁 zip 后 `dex2oat64` speed 编译，修改 odex/vdex 的 ZIP CRC，部署到 `/data/dalvik-cache`；脚本用 `trap` 在退出时 `umount -l` 并重新 bind mount 模块内原始 APK（否则会把 Magisk 挂载一起卸载，APK 变成 0 字节）。
-- `customize.sh`：按 `$ARCH`（arm64/x64）选择 libshell stub，创建 `system/lib64`。
-- `uninstall.sh`：通过 Magisk/KernelSU 卸载模块时清理 odex/vdex、旧版 data-app 残留、appops、临时文件、CTA 预置；不删除账号/云服务用户数据。
+- `customize.sh`：按 `$ARCH`（arm64/x64）选择 libshell stub，创建 `system/lib64`；通过音量键询问是否启用红魔通话录音映射。
+- `uninstall.sh`：通过 Magisk/KernelSU 卸载模块时清理 odex/vdex、旧版 data-app 残留、appops、临时文件、CTA 预置和通话录音 bind mount/配置；不删除账号/云服务/相册/录音用户数据。
 - `system/system_ext/framework/androidx-core-stub.jar`：由 `steps/build.py` 从 `xposed/stub` 自动编译；`MiCloudXposed.apk` 由 `xposed/build.py` 构建后放到 `system/product/app/MiCloudXposed/`，由 PMS 扫描，service 仅负责更新/兜底和 Vector scope。
 
 ## 常见问题
@@ -321,6 +332,7 @@ AOSP 没有这个 provider。模块在 `system/product/app/CloudIdProvider/` 预
 - **重启后网络一直不 VALIDATED**：模拟器探针可能超时；临时 `settings put global captive_portal_mode 0`，再 WiFi 关闭/开启 + 重设 IPv6 disable。仅模拟器测试用。
 - **账号设置页 FindDevice 崩溃**：当前遗留问题，不影响 cloudbackup device ID 验证；需要补 `com.xiaomi.finddevice` service 或禁用状态检查。
 - **相册 5.x 不能用**：5.x 是 HyperOS Rust 应用，依赖 `hyos_spawner` 和 HyperOS system_server，纯 AOSP 不可模块化；本流水线固定使用国内版 4.3.1.18 + MediaEditor。
+- **红魔通话录音没有出现在小米录音里**：检查 `/data/adb/micloudport_callrec.conf` 是否为 `1`、`mount | grep call_rec` 是否有 bind mount、`/data/local/tmp/micloudport.log` 是否出现 `callrec mapping enabled` 或 `skipped`。目标 `call_rec` 已有小米录音时会跳过映射；软链接在 `/storage/emulated/0` 不可用，必须用 FUSE 路径 bind mount。映射后如小米录音已在运行，强制停止再打开以触发重新扫描。
 
 ## 未提交文件
 

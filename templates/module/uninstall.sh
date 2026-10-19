@@ -6,6 +6,9 @@ echo "==== uninstall $(date) ===="
 
 am force-stop com.xiaomi.account 2>/dev/null
 umount -l /product/app/MIUIXiaomiAccount/MIUIXiaomiAccount.apk 2>/dev/null
+umount -l /storage/emulated/0/MIUI/sound_recorder/call_rec 2>/dev/null
+rm -f /data/adb/micloudport_callrec.conf
+rm -f /data/local/tmp/micloudport_keys
 
 for ISA in x86_64 arm64; do
   D=/data/dalvik-cache/$ISA

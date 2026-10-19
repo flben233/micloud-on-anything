@@ -99,6 +99,21 @@ def copy_component(src: Path, dst_dir: Path, name: str | None = None) -> Path:
     return target
 
 
+def extract_apk_libs(apk: Path, abi: str, dst_dir: Path) -> int:
+    require_file(apk, "APK")
+    prefix = f"lib/{abi}/"
+    ensure_dir(dst_dir)
+    count = 0
+    with zipfile.ZipFile(apk) as z:
+        for info in z.infolist():
+            if not info.filename.startswith(prefix) or not info.filename.endswith(".so"):
+                continue
+            name = Path(info.filename).name
+            (dst_dir / name).write_bytes(z.read(info))
+            count += 1
+    return count
+
+
 def assemble_module(
     *,
     config,
@@ -136,11 +151,15 @@ def assemble_module(
     copy_component(_source(config, "findmy", inputs), product_app / "MIUIFindMy", "MIUIFindMy.apk")
     copy_component(artifacts["cloudid"], product_app / "CloudIdProvider", "CloudIdProvider.apk")
     gallery_app = product_app / "MiCloudGallery"
-    copy_component(artifacts["gallery"], gallery_app, "MiCloudGallery.apk")
+    gallery_apk = copy_component(artifacts["gallery"], gallery_app, "MiCloudGallery.apk")
+    gallery_libdir = ensure_dir(gallery_app / "lib" / "arm64")
+    lib_count = extract_apk_libs(gallery_apk, "arm64-v8a", gallery_libdir)
+    log(f"gallery native libs extracted: {lib_count}")
     gallery_libs = Path(__file__).resolve().parents[1] / "assets" / "gallery-libs"
     if gallery_libs.is_dir():
-        copy_tree(gallery_libs, ensure_dir(gallery_app / "lib" / "arm64"))
-        copy_tree(gallery_libs, ensure_dir(output_dir / "system" / "product" / "lib64"))
+        for lib in sorted(gallery_libs.glob("*.so")):
+            copy_file(lib, gallery_libdir / lib.name)
+            copy_file(lib, ensure_dir(output_dir / "system" / "product" / "lib64") / lib.name)
     copy_component(artifacts["mediaeditor"], product_app / "MiMediaEditor", "MiMediaEditor.apk")
     copy_component(artifacts["xposed_apk"], product_app / "MiCloudXposed", "MiCloudXposed.apk")
 

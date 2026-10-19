@@ -43,6 +43,33 @@ for i in $(seq 1 120); do
 done
 echo "system ready (ok=$OK)"
 
+CALLREC_CONF=/data/adb/micloudport_callrec.conf
+CALLREC_ENABLED=$(cat "$CALLREC_CONF" 2>/dev/null)
+CALLREC_SRC=/storage/emulated/0/CallRecord
+CALLREC_DEST=/storage/emulated/0/MIUI/sound_recorder/call_rec
+if [ "$CALLREC_ENABLED" = "1" ]; then
+  mkdir -p "$CALLREC_SRC"
+  chown 1023:1023 "$CALLREC_SRC" 2>/dev/null
+  chmod 2770 "$CALLREC_SRC" 2>/dev/null
+  if [ -L "$CALLREC_DEST" ]; then
+    rm -f "$CALLREC_DEST"
+  fi
+  mkdir -p "$CALLREC_DEST"
+  chown 1023:1023 "$CALLREC_DEST" 2>/dev/null
+  chmod 2770 "$CALLREC_DEST" 2>/dev/null
+  umount -l "$CALLREC_DEST" 2>/dev/null
+  if ls -A "$CALLREC_DEST" 2>/dev/null | grep -v '^\.nomedia$' | grep -q .; then
+    echo "callrec mapping skipped: target has existing files"
+  elif mount --bind "$CALLREC_SRC" "$CALLREC_DEST"; then
+    echo "callrec mapping enabled: $CALLREC_SRC -> $CALLREC_DEST"
+  else
+    echo "callrec mapping failed"
+  fi
+else
+  umount -l "$CALLREC_DEST" 2>/dev/null
+  echo "callrec mapping disabled"
+fi
+
 if [ "$(getprop ro.debuggable)" = "1" ]; then
   settings put global hidden_api_policy 1
 fi

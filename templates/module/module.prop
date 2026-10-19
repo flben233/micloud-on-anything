@@ -1,6 +1,6 @@
 id=micloudport
 name=Xiaomi Cloud Port (nezha)
-version=1.2
-versionCode=18
+version=1.2.2
+versionCode=20
 author=ShirakawaTyu
 description=Ports Xiaomi Cloud (account/cloud/sync/backup/findmy), MIUI Gallery 4.3.1.18 (China), MediaEditor 2.3.0.8.3 and Sound Recorder from Xiaomi 17 HyperOS 3 to AOSP Android 16. Requires Magisk/KernelSU. Target: Android 16 (API 36), arm64/x86_64.
