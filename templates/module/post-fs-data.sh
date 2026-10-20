@@ -26,6 +26,9 @@ set_prop ro.miui.ui.font.animation disable
 set_prop ro.ai.os.version.code 4
 set_prop ro.ai.os.version.name OS3.1
 set_prop ro.miui.region CN
+set_prop persist.sys.computility.version 2025
+set_prop persist.sys.computility.cpulevel 5
+set_prop persist.sys.computility.gpulevel 5
 
 MODVER=$(grep '^versionCode=' "$MODDIR/module.prop" | cut -d= -f2)
 CACHEVER=$(cat /data/adb/micloudport_cache_ver 2>/dev/null)

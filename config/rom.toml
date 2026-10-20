@@ -6,8 +6,8 @@ android_api = 36
 [module]
 id = "micloudport"
 name = "Xiaomi Cloud Port (nezha)"
-version = "1.2.2"
-version_code = 20
+version = "1.2.5"
+version_code = 23
 author = "ShirakawaTyu"
 description = "Ports Xiaomi Cloud (account/cloud/sync/backup/findmy), MIUI Gallery 4.3.1.18 (China), MediaEditor 2.3.0.8.3 and Sound Recorder from Xiaomi 17 HyperOS 3 to AOSP Android 16. Requires Magisk/KernelSU. Target: Android 16 (API 36), arm64/x86_64."
 
@@ -43,6 +43,9 @@ key_password = ""
 "ro.ai.os.version.code" = "4"
 "ro.ai.os.version.name" = "OS3.1"
 "ro.miui.region" = "CN"
+"persist.sys.computility.version" = "2025"
+"persist.sys.computility.cpulevel" = "5"
+"persist.sys.computility.gpulevel" = "5"
 
 [source]
 account = "product/app/MIUIXiaomiAccount/MIUIXiaomiAccount.apk"
@@ -80,6 +83,7 @@ mi_ext_build_prop = "mi_ext/etc/build.prop"
 "xm-telephony-base.jar" = "system_ext/framework/xm-telephony-base.jar"
 "xm-telephony-common.jar" = "system_ext/framework/xm-telephony-common.jar"
 "gson.jar" = "system_ext/framework/gson.jar"
+"MiuiBooster.jar" = "system_ext/framework/MiuiBooster.jar"
 "hyperos.rustruntime.jar" = "system_ext/framework/hyperos.rustruntime.jar"
 "vendor.xiaomi.hardware.videoservice-V9-java.jar" = "system_ext/framework/vendor.xiaomi.hardware.videoservice-V9-java.jar"
 

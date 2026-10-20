@@ -95,6 +95,8 @@ public final class MiCloudXposed extends XposedModule {
     private static final AtomicBoolean CLOUD_SETTINGS_HOOK_DONE = new AtomicBoolean(false);
     private static final AtomicBoolean CLOUD_SYNC_AUTO_VERSION_HOOK_DONE = new AtomicBoolean(false);
     private static final AtomicBoolean GALLERY_BIND_CPU_HOOK_DONE = new AtomicBoolean(false);
+    private static final AtomicBoolean MEDIAEDITOR_PRO_HOOK_DONE = new AtomicBoolean(false);
+    private static final AtomicBoolean MEDIAEDITOR_DEVICE_HOOK_DONE = new AtomicBoolean(false);
     private static final AtomicBoolean SIMACTIVATE_TELEPHONY_HOOK_DONE = new AtomicBoolean(false);
     private static final String FINDDEVICE_STORE = "micloudport_finddevice_store";
 
@@ -188,7 +190,7 @@ public final class MiCloudXposed extends XposedModule {
             log(Log.WARN, TAG, label + ": cannot create " + cache);
             return;
         }
-        String dexPath = jarPath();
+        String dexPath = sharedJarPath();
         if (dexPath == null) {
             log(Log.ERROR, TAG, label + ": no MIUI jars are mounted");
             return;
@@ -209,6 +211,24 @@ public final class MiCloudXposed extends XposedModule {
     private static String jarPath() {
         StringBuilder builder = new StringBuilder();
         for (String path : JARS) {
+            File file = new File(path);
+            if (!file.isFile()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(File.pathSeparatorChar);
+            }
+            builder.append(path);
+        }
+        return builder.length() == 0 ? null : builder.toString();
+    }
+
+    private static String sharedJarPath() {
+        StringBuilder builder = new StringBuilder();
+        for (String path : JARS) {
+            if (path.endsWith("/gson.jar")) {
+                continue;
+            }
             File file = new File(path);
             if (!file.isFile()) {
                 continue;
@@ -504,6 +524,111 @@ public final class MiCloudXposed extends XposedModule {
     }
 
     /**
+     * MediaEditor removes the AI Erase Pro (/remover2/provider) entry when
+     * Db.a.c() reports that the device is not a supported high-end model.
+     * That check is a Xiaomi model whitelist plus a 4.5 GB RAM threshold, so
+     * non-Xiaomi devices such as the RedMagic are treated as low-end even
+     * when they have plenty of RAM.  The entry is only a navigation gate;
+     * the actual model download and inference still run their own checks.
+     */
+    private void installMediaEditorProHooks(ClassLoader host) {
+        installMediaEditorDeviceSpoof(host);
+        if (MEDIAEDITOR_PRO_HOOK_DONE.get()) {
+            return;
+        }
+        try {
+            Class<?> deviceSupport = Class.forName("Db.a", false, host);
+            hook(deviceSupport.getDeclaredMethod("c"))
+                    .intercept(new XposedInterface.Hooker() {
+                        @Override
+                        public Object intercept(XposedInterface.Chain chain) {
+                            return Boolean.TRUE;
+                        }
+                    });
+            MEDIAEDITOR_PRO_HOOK_DONE.set(true);
+            log(Log.INFO, TAG, "MediaEditor AI Erase Pro gate hook installed");
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "MediaEditor AI Erase Pro hook failed: " + t);
+        }
+    }
+
+    /**
+     * MediaEditor has many Xiaomi-only feature gates that compare
+     * android.os.Build.DEVICE against hard-coded model lists (B0.b.x,
+     * zb.l, zb.c, zb.q, and the superportrait list in Bb.c.b).  The module
+     * sets ro.product.mod_device=nezha, but Build.DEVICE still reports the
+     * real NX809J on RedMagic, so only /creative and /remover2 survive.
+     * Make this process see the target Xiaomi codename and keep small
+     * fallback hooks for the common boolean gates.
+     */
+    private void installMediaEditorDeviceSpoof(ClassLoader host) {
+        if (!MEDIAEDITOR_DEVICE_HOOK_DONE.compareAndSet(false, true)) {
+            return;
+        }
+        final String device = "nezha";
+        try {
+            Class<?> build = Class.forName("android.os.Build", false, host);
+            setStaticField(build, "DEVICE", device);
+            log(Log.INFO, TAG, "MediaEditor Build.DEVICE spoof installed: " + device);
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "MediaEditor Build.DEVICE spoof failed: " + t);
+        }
+        hookBoolean(host, "B0.b", "x", "device support");
+        hookBoolean(host, "B0.b", "v", "CN region");
+        hookBoolean(host, "zb.q", "a", "sky");
+        hookBoolean(host, "D8.j", "p", "beautification");
+
+        try {
+            Class<?> matting = Class.forName("zb.l", false, host);
+            for (Field field : matting.getDeclaredFields()) {
+                if (field.getType() == Boolean.TYPE) {
+                    field.setAccessible(true);
+                    field.setBoolean(null, true);
+                    log(Log.INFO, TAG, "MediaEditor matting support enabled");
+                }
+            }
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "MediaEditor matting gate failed: " + t);
+        }
+
+        try {
+            Class<?> bokeh = Class.forName("zb.c", false, host);
+            for (Field field : bokeh.getDeclaredFields()) {
+                if (!Set.class.isAssignableFrom(field.getType())) {
+                    continue;
+                }
+                field.setAccessible(true);
+                Object value = field.get(null);
+                if (value instanceof Set) {
+                    Set<String> devices = (Set<String>) value;
+                    devices.add(device);
+                    devices.add(android.os.Build.DEVICE);
+                    log(Log.INFO, TAG, "MediaEditor bokeh device added");
+                }
+            }
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "MediaEditor bokeh gate failed: " + t);
+        }
+    }
+
+    private void hookBoolean(ClassLoader host, String className, String methodName,
+            String label) {
+        try {
+            Class<?> clazz = Class.forName(className, false, host);
+            hook(clazz.getDeclaredMethod(methodName))
+                    .intercept(new XposedInterface.Hooker() {
+                        @Override
+                        public Object intercept(XposedInterface.Chain chain) {
+                            return Boolean.TRUE;
+                        }
+                    });
+            log(Log.INFO, TAG, "MediaEditor " + label + " gate hooked");
+        } catch (Throwable t) {
+            log(Log.WARN, TAG, "MediaEditor " + label + " gate failed: " + t);
+        }
+    }
+
+    /**
      * Android 16 only allows subscriber identifiers for apps holding
      * READ_PRIVILEGED_PHONE_STATE, a carrier privilege, or the signature
      * USE_ICC_AUTH_WITH_DEVICE_IDENTIFIER app-op.  SimActivate is a normal
@@ -712,6 +837,9 @@ public final class MiCloudXposed extends XposedModule {
         if ("com.miui.gallery".equals(packageName)) {
             installGalleryBindCpuHook(host);
         }
+        if ("com.miui.mediaeditor".equals(packageName)) {
+            installMediaEditorProHooks(host);
+        }
         synchronized (LOCK) {
             if (INJECTED.containsKey(host)) {
                 return;
@@ -824,6 +952,13 @@ public final class MiCloudXposed extends XposedModule {
         Field field = findField(target.getClass(), name);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private static void setStaticField(Class<?> clazz, String name, Object value)
+            throws Exception {
+        Field field = findField(clazz, name);
+        field.setAccessible(true);
+        field.set(null, value);
     }
 
     private static Field findField(Class<?> clazz, String name) throws NoSuchFieldException {

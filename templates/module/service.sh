@@ -81,6 +81,9 @@ cmd appops set com.miui.cloudbackup READ_DEVICE_IDENTIFIERS allow 2>/dev/null
 pm grant com.xiaomi.simactivate.service android.permission.READ_PHONE_STATE 2>/dev/null
 pm grant com.miui.cloudservice android.permission.READ_PHONE_STATE 2>/dev/null
 
+# Device/computility hints for MIUI Gallery/MediaEditor AI features
+settings put system deviceLevelList 'v:1,c:3,g:3;v:2,c:3,g:3;v:3,c:3,g:3' 2>/dev/null
+
 
 if [ "$(getprop ro.kernel.qemu)" = "1" ]; then
   settings put global captive_portal_https_url https://connectivitycheck.gstatic.com/generate_204
@@ -132,7 +135,7 @@ XV=$(dumpsys package "$XPACKAGE" 2>/dev/null | grep -m1 'versionCode=' | sed 's/
 INSTALL_XPOSED=0
 if [ -z "$XV" ]; then
   INSTALL_XPOSED=1
-elif [ "$XV" -lt 2 ] 2>/dev/null; then
+elif [ "$XV" -lt 3 ] 2>/dev/null; then
   INSTALL_XPOSED=1
 fi
 XPOSED_APK="$MODDIR/system/product/app/MiCloudXposed/MiCloudXposed.apk"
