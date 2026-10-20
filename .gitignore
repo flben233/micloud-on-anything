@@ -20,3 +20,5 @@ config/local.toml
 *.jks
 *.keystore
 *.log
+
+.idea/
